@@ -1,11 +1,11 @@
-# SecOps-Sentinel 🛡️
+# Heimdall 🛡️ (HIDS & Active Response Engine)
 
+[![CI Pipeline](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml/badge.svg)](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-teal.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-passing-green.svg)]()
 
-**SecOps-Sentinel** is a lightweight, production-grade **Host Intrusion Detection System (HIDS) and Active Response Engine** built from scratch in Python. It monitors system/auth logs in real-time, evaluates events against customizable YAML detection rules (Sigma-style), logs security incidents to an SQLite database, exposes a REST API via **FastAPI**, and automatically executes defensive countermeasures (such as blocking malicious source IPs via system firewalls).
+**Heimdall** is a lightweight, production-grade **Host Intrusion Detection System (HIDS) and Active Response Engine** built from scratch in Python. It monitors system/auth logs in real-time, evaluates events against customizable YAML detection rules (Sigma-style), logs security incidents to an SQLite database, exposes a REST API via **FastAPI**, and automatically executes defensive countermeasures (such as blocking malicious source IPs via system firewalls).
 
 Designed as an advanced portfolio project for aspiring **Junior SOC Analysts, Security Engineers, and Sysadmins transitioning into Cybersecurity**.
 
@@ -14,7 +14,7 @@ Designed as an advanced portfolio project for aspiring **Junior SOC Analysts, Se
 ## 🏗️ Architecture & Component Design
 
 ```text
-SecOps-Sentinel/
+ Heimdall/
 │
 ├── core/
 │   ├── parser.py       # Normalizes Linux auth.log, Windows Security Event logs, and custom syslog streams
@@ -58,8 +58,8 @@ SecOps-Sentinel/
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/SecOps-Sentinel.git
-cd SecOps-Sentinel
+git clone https://github.com/Fioru12/Heimdall.git
+cd Heimdall
 pip install -r requirements.txt
 ```
 

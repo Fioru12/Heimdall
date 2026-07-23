@@ -7,7 +7,7 @@ from core.detector import RuleDetector
 from core.responder import ActiveResponder
 
 app = FastAPI(
-    title="SecOps-Sentinel API",
+    title="Heimdall HIDS API",
     description="Host Intrusion Detection System & Active Response REST API",
     version="1.0.0"
 )
@@ -25,7 +25,7 @@ class LogIngestRequest(BaseModel):
 def read_root():
     return {
         "status": "online",
-        "service": "SecOps-Sentinel HIDS",
+        "service": "Heimdall HIDS",
         "version": "1.0.0",
         "endpoints": [
             "/api/v1/alerts",

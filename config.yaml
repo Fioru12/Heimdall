@@ -1,0 +1,16 @@
+# Heimdall HIDS & Active Response Configuration
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+  reload: true
+
+database:
+  path: "heimdall.db"
+
+rules:
+  directory: "rules"
+
+responder:
+  dry_run: true
+  allowed_os: ["Linux", "Windows"]
