@@ -1,85 +1,75 @@
-# <div align="center">Heimdall 🛡️</div>
 <div align="center">
-  <sub><i>Il Guardiano del Bifröst &mdash; HIDS & Active Response Engine</i></sub>
-</div>
+
+```
+    ██╗  ██╗███████╗██╗███╗   ███╗██████╗  █████╗ ██╗     ██╗     
+    ██║  ██║██╔════╝██║████╗ ████║██╔══██╗██╔══██╗██║     ██║     
+    ███████║█████╗  ██║██╔████╔██║██║  ██║███████║██║     ██║     
+    ██╔══██║██╔══╝  ██║██║╚██╔╝██║██║  ██║██╔══██║██║     ██║     
+    ██║  ██║███████╗██║██║ ╚═╝ ██║██████╔╝██║  ██║███████╗███████╗
+    ╚═╝  ╚═╝╚══════╝╚═╝╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
+```
+
+### **Asgard Cybersecurity Suite** &mdash; Module I
 
 <br/>
 
-<div align="center">
-
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![CI](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml/badge.svg?style=for-the-badge)
-
-</div>
 
 <br/>
 
 > [!IMPORTANT]
 > **Heimdall** è il primo modulo della **suite Asgard**. 
-> È un Host Intrusion Detection System progettato per trasformare i log di sistema in **azioni difensive automatizzate** in tempo reale.
+> Trasforma i log grezzi in **azioni difensive in tempo reale**.
+
+</div>
 
 ---
 
-## 🧠 Executive Summary
-In un SOC moderno, il tempo di risposta è tutto. **Heimdall** riduce il gap tra l'evento di sicurezza e la mitigazione, implementando l'intero flusso `SIEM &rarr; Detection &rarr; Response` in una sola pipeline Python efficiente.
+### 🧠 Executive Summary
+Heimdall non si limita a loggare: **reagisce**. Monitora i tentativi di intrusione (SSH brute-force, accessi Windows falliti) e attiva automaticamente il firewall locale per bloccare l'attaccante.
 
-```
-  Log Files  ──▶  Parser  ──▶  Detector (YAML) ──▶  SQLite Storage
-                                    │
-                                    ▼
-                             Active Response (Firewall)
+```mermaid
+graph LR
+    A[Log Files] -->|Parser| B(Detector)
+    B -->|Alert| C{Severità High?}
+    C -->|Sì| D[Active Response]
+    C -->|No| E[SQLite Storage]
+    D --> F[Blocco Firewall]
 ```
 
 ---
 
-## 🚀 Caratteristiche Tecniche
+### 🚀 Caratteristiche Tecniche
 
-| Funzionalità | Descrizione |
+| Modulo | Descrizione |
 |:---|:---|
-| 🔍 **Log Parser** | Normalizzazione multi-format (Linux Auth, Windows Event) |
-| 🧠 **YAML Rules** | Detection logic basata su file YAML (Sigma-style) |
-| 🛡️ **Active Response** | Blocco IP automatizzato via `iptables`/`ufw`/`netsh` |
-| 📊 **REST API** | API FastAPI per interrogazione telemetria e alert |
+| 🔍 **Parser** | Regex engine per Linux/Windows log |
+| 🛡️ **HIDS Core** | Detection engine basato su file YAML |
+| 🧱 **Responder** | Blocco IP via `ufw`/`iptables`/`netsh` |
+| 📊 **Dashboard API** | FastAPI per consultazione telemetria |
 
 > [!TIP]
-> Heimdall utilizza una logica di **sliding window** per il rilevamento di brute-force, garantendo precisione ed evitando alert fatigue.
+> Heimdall usa una **sliding window** temporale per evitare di bloccare utenti legittimi per errori di digitazione sporadici.
 
 ---
 
-## 🛠️ Quickstart
+### 🛠️ Setup Rapido
 
 ```bash
-# Installazione
 git clone https://github.com/Fioru12/Heimdall.git
 cd Heimdall
 pip install -r requirements.txt
 
-# Test
-pytest
-
-# Avvio API & Demo
-python main.py api
-python run_local_demo.py
+# Start demo
+python main.py api & python run_local_demo.py
 ```
-
----
-
-## 🔗 Suite Asgard
-
-Heimdall è il primo pilastro dell'ecosistema **Asgard**:
-
-| Modulo | Ruolo | Stato |
-|:---|:---|:---:|
-| **Heimdall** | HIDS &middot; Rilevamento & Response | `Fatto` |
-| **Mjolnir** | IR &middot; Triage & Forensics | `Fatto` |
-| **Bifrost** | Rete &middot; Telemetria & Report Cifrati | `Fatto` |
 
 ---
 
 <div align="center">
 
-**[Fioru12](https://github.com/Fioru12)** &middot; MIT License
+**[Suite Asgard](https://github.com/Fioru12/Heimdall)** &middot; MIT License
 
 </div>
