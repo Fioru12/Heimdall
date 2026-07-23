@@ -1,0 +1,8 @@
+id: PORT_SCAN_01
+title: Suspicious Port Scan or Unauthorized Probe
+severity: MEDIUM
+log_source: firewall
+pattern: "unauthorized"
+threshold: 2
+timeframe: 60
+description: "Multiple unauthorized connection probes detected from external IP."

@@ -1,0 +1,8 @@
+id: SSH_BRUTE_FORCE_01
+title: SSH Brute-Force Attack Detected
+severity: HIGH
+log_source: auth.log
+pattern: "Failed password for"
+threshold: 3
+timeframe: 30
+description: "Multiple failed SSH login attempts detected from the same IP address within a short time window."

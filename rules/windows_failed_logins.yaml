@@ -1,0 +1,8 @@
+id: WIN_FAILED_LOGON_01
+title: Windows Multiple Failed Logins (Event 4625)
+severity: HIGH
+log_source: windows_security
+pattern: "EventID 4625"
+threshold: 3
+timeframe: 30
+description: "Multiple Windows account logon failures detected indicating possible brute force or credential stuffing."
