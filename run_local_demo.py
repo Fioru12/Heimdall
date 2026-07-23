@@ -7,11 +7,12 @@ from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
 from storage.database import HeimdallDatabase
+from core.colors import Colors
 
 def run_demo():
-    print("=" * 60)
-    print(" Heimdall Local Demonstration & Live Test")
-    print("=" * 60)
+    print(Colors.BLUE + "=" * 60 + Colors.ENDC)
+    print(f"{Colors.BOLD} Heimdall Local Demonstration & Live Test{Colors.ENDC}")
+    print(Colors.BLUE + "=" * 60 + Colors.ENDC)
 
     parser = LogParser()
     detector = RuleDetector()
@@ -28,14 +29,14 @@ def run_demo():
     ]
 
     for i, log_line in enumerate(logs, 1):
-        print(f"\n[Ingest {i}] Processing log: {log_line}")
+        print(f"\n{Colors.BOLD}[Ingest {i}]{Colors.ENDC} Processing log: {log_line}")
         parsed = parser.parse_line(log_line)
         if parsed:
             print(f"   Parsed Event -> Type: {parsed['log_type']}, IP: {parsed['source_ip']}, User: {parsed['username']}")
             alerts = detector.evaluate(parsed)
             if alerts:
                 for alert in alerts:
-                    print(f"   [ALERT] TRIGGERED: {alert['rule_title']} (Severity: {alert['severity']})")
+                    print(f"   {Colors.GREEN}[ALERT] TRIGGERED:{Colors.ENDC} {alert['rule_title']} ({alert['severity']})")
                     action = "LOGGED"
                     if alert["severity"] in ["HIGH", "CRITICAL"]:
                         ip = alert.get("source_ip")
@@ -49,13 +50,13 @@ def run_demo():
         else:
             print("   [Warning] Log line not recognized.")
 
-    print("\n" + "=" * 60)
-    print(" Demonstration Complete! Database Statistics:")
+    print("\n" + Colors.BLUE + "=" * 60 + Colors.ENDC)
+    print(f" Demonstration Complete! Database Statistics:")
     stats = db.get_stats()
     print(f" - Total Alerts Recorded: {stats['total_alerts']}")
     print(f" - Severity Breakdown: {stats['severity_breakdown']}")
     print(f" - Total Blocked IPs: {stats['total_blocked_ips']}")
-    print("=" * 60)
+    print(Colors.BLUE + "=" * 60 + Colors.ENDC)
 
 if __name__ == "__main__":
     run_demo()
