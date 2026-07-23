@@ -1,149 +1,166 @@
-# Heimdall 🛡️ (HIDS & Active Response Engine)
+<div align="center">
 
-[![CI Pipeline](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml/badge.svg)](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-teal.svg)](https://fastapi.tiangolo.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+```
+    ██╗  ██╗██╗███████╗███████╗ ██████╗ ██████╗ ██████╗ ███████╗
+    ██║  ██║██║██╔════╝██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔════╝
+    ███████║██║█████╗  ███████╗██║     ██║   ██║██║  ██║█████╗  
+    ██╔══██║██║██╔══╝  ╚════██║██║     ██║   ██║██║  ██║██╔══╝  
+    ██║  ██║██║███████╗███████║╚██████╗╚██████╔╝██████╔╝███████╗
+    ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝
+```
 
-**Heimdall** is a lightweight, production-grade **Host Intrusion Detection System (HIDS) and Active Response Engine** built from scratch in Python. It monitors system/auth logs in real-time, evaluates events against customizable YAML detection rules (Sigma-style), logs security incidents to an SQLite database, exposes a REST API via **FastAPI**, and automatically executes defensive countermeasures (such as blocking malicious source IPs via system firewalls).
+### **Asgard Cybersecurity Suite** &mdash; Module I
 
-Designed as an advanced portfolio project for aspiring **Junior SOC Analysts, Security Engineers, and Sysadmins transitioning into Cybersecurity**.
+<br/>
+
+[![CI](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml/badge.svg)](https://github.com/Fioru12/Heimdall/actions/workflows/pytest.yml)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-orange?style=flat-square)
+
+<br/>
+
+**Heimdall** &mdash; *il guardiano del Bifr&ouml;st* &mdash; &egrave; un sistema di rilevamento intrusioni host (HIDS) con risposta automatica.
+Monitora i log di sistema in tempo reale, li valuta contro regole YAML personalizzabili e, quando rileva un attacco, **blocca l'IP malevolo tramite firewall** senza intervento umano.
+
+</div>
 
 ---
 
-## 🏗️ Architecture & Component Design
+## Perch&egrave; esiste Heimdall
 
-```text
- Heimdall/
-│
-├── core/
-│   ├── parser.py       # Normalizes Linux auth.log, Windows Security Event logs, and custom syslog streams
-│   ├── detector.py     # Evaluation engine supporting threshold counting & sliding time windows
-│   └── responder.py    # Active Response module executing firewall bans (UFW/iptables/Windows Firewall)
-│
-├── rules/              # Sigma-style YAML detection signatures
-│   ├── ssh_bruteforce.yaml
-│   └── windows_failed_logins.yaml
-│
-├── storage/
-│   └── database.py     # SQLite persistence layer for alerts, audit trails, and blocked IPs
-│
-├── api/                # FastAPI REST interface for querying telemetry and alerts
-│   └── server.py
-│
-├── tests/              # Comprehensive test suite (pytest)
-│   └── test_sentinel.py
-│
-├── main.py             # CLI entrypoint (API server, live file monitor, simulation runner)
-└── simulate_attacks.py # Automated red-team simulation tool for testing detection & response
+In un SOC reale il flusso di lavoro &egrave;: **Log &rarr; SIEM &rarr; Alert &rarr; Risposta**.
+Heimdall implementa l'intera catena in un'unica applicazione Python:
+
+```
+  Log Linux/Windows  ──▶  Parser strutturato  ──▶  Detector a regole YAML
+                                                          │
+                                                    Alert generato
+                                                          │
+                                                   ┌──────┴──────┐
+                                                   ▼              ▼
+                                             SQLite DB      Active Response
+                                                           (blocco firewall)
 ```
 
 ---
 
-## ✨ Key Features
+## Architettura
 
-1. **Multi-Format Log Parser**: Parses Linux SSH authentication logs, Windows Security Event logs (Event ID 4625), and general security streams.
-2. **Modular YAML Detection Rules**: Decouples logic from code. Rules define patterns, severities, alert thresholds, and time windows (sliding windows).
-3. **Automated Active Response**: Automatically invokes system firewalls (`ufw`, `iptables`, or Windows Firewall `netsh`) upon detecting high-severity brute-force attacks.
-4. **Persistent Telemetry Storage**: Stores historical alerts, threat indicators, and mitigation actions in a structured SQLite database.
-5. **FastAPI REST Endpoints**: Exposes endpoints for SIEM integration, dashboard querying, and real-time event ingestion.
-6. **Comprehensive Test Coverage**: Tested and verified with `pytest` for robust reliability.
+<details>
+<summary><b>Struttura completa del progetto</b></summary>
+
+```
+Heimdall/
+├── core/
+│   ├── parser.py         Linux auth.log + Windows Event 4625 + generico
+│   ├── detector.py       Sliding window + soglie configurabili
+│   └── responder.py      UFW / iptables / Windows Firewall (dry-run)
+│
+├── rules/                Regole Sigma-style in YAML
+│   ├── ssh_bruteforce.yaml
+│   ├── windows_failed_logins.yaml
+│   └── port_scan_suspicious.yaml
+│
+├── storage/
+│   └── database.py       Persistenza SQLite (alert, IP bloccati, statistiche)
+│
+├── api/
+│   └── server.py         REST API con FastAPI + Swagger interattivo
+│
+├── tests/
+│   └── test_sentinel.py  Suite completa pytest
+│
+├── config.yaml           Configurazione centralizzata
+├── main.py               CLI: api | monitor | simulate
+├── run_local_demo.py     Demo standalone per test locali
+└── simulate_attacks.py   Simulatore red-team automatico
+```
+
+</details>
 
 ---
 
-## 🚀 Quickstart Guide
+## Funzionalit&agrave;
 
-### 1. Installation
+| Modulo | Cosa fa |
+|:---|:---|
+| **Log Parser** | Normalizza Linux SSH logs, Windows Event 4625 e stream generici con regex |
+| **Rule Detector** | Valuta eventi contro regole YAML con finestre temporali scorrevoli e soglie |
+| **Active Response** | Blocca IP malevoli via `ufw`, `iptables` o `netsh advfirewall` (con modalit&agrave; dry-run) |
+| **SQLite Storage** | Persistenza alert, audit trail storico e IP bloccati |
+| **REST API** | Endpoint per ingestione log, query alert, statistiche e lista IP bloccati |
 
-Clone the repository and install dependencies:
+---
+
+## Quickstart
 
 ```bash
+# Clona e installa
 git clone https://github.com/Fioru12/Heimdall.git
 cd Heimdall
 pip install -r requirements.txt
-```
 
-### 2. Running Unit Tests
-
-Verify everything works correctly out of the box:
-
-```bash
+# Test
 pytest
-```
 
-### 3. Starting the REST API Server
-
-```bash
+# Avvia il server API
 python main.py api
-```
 
-The FastAPI server will be available at `http://127.0.0.1:8000`. You can explore the interactive API documentation at `http://127.0.0.1:8000/docs`.
-
-### 4. Running the Attack Simulation
-
-To test the detection engine and active response without setting up a vulnerable environment manually, run the simulation script in a separate terminal:
-
-```bash
+# Simula un attacco brute-force
 python main.py simulate
-```
 
-**Sample Output:**
-```text
-============================================================
- SecOps-Sentinel Attack Simulation Tool
-============================================================
-Target API: http://127.0.0.1:8000/api/v1/ingest
-
-[1/6] Sending log: Failed password for invalid user root from 203.0.113.50
-   Response Status: processed
-   [Info] Event processed (threshold not yet reached).
-[2/6] Sending log: Failed password for invalid user root from 203.0.113.50
-   Response Status: processed
-   [Info] Event processed (threshold not yet reached).
-[3/6] Sending log: Failed password for invalid user root from 203.0.113.50
-   Response Status: processed
-   🚨 ALERTS TRIGGERED: 1
-      - Rule: SSH Brute-Force Attack Detected | Action: BLOCKED_IP
-
-[ACTIVE RESPONSE] 🚨 Triggered block for malicious IP: 203.0.113.50 | Reason: SSH Brute-Force Attack Detected
-[SIMULATION] IP 203.0.113.50 recorded in active response block list.
+# Demo standalone (senza server)
+python run_local_demo.py
 ```
 
 ---
 
-## 📊 API Endpoints
+## API
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Service health status and overview |
-| `GET` | `/api/v1/alerts` | Retrieve recent security alerts (supports limit query param) |
-| `GET` | `/api/v1/stats` | Security statistics (severity breakdown, total alerts, blocked IPs) |
-| `POST` | `/api/v1/ingest` | Ingest and evaluate a log line in real-time |
-| `GET` | `/api/v1/blocked` | List all actively blocked IP addresses and reasons |
+| Method | Endpoint | Descrizione |
+|:---:|:---|:---|
+| `GET` | `/` | Stato del servizio |
+| `POST` | `/api/v1/ingest` | Invia una riga di log per analisi in tempo reale |
+| `GET` | `/api/v1/alerts` | Ultimi alert registrati |
+| `GET` | `/api/v1/stats` | Statistiche severit&agrave; e IP bloccati |
+| `GET` | `/api/v1/blocked` | Lista IP bloccati con motivazione |
+
+Documentazione interattiva Swagger disponibile su `http://127.0.0.1:8000/docs` dopo l'avvio.
 
 ---
 
-## 📝 Example YAML Rule (`rules/ssh_bruteforce.yaml`)
+## Esempio di regola YAML
 
 ```yaml
 id: SSH_BRUTE_FORCE_01
 title: SSH Brute-Force Attack Detected
 severity: HIGH
-log_source: auth.log
 pattern: "Failed password for"
 threshold: 3
 timeframe: 30
-description: "Multiple failed SSH login attempts detected from the same IP address within a short time window."
+description: "Tentativi SSH multipli falliti dallo stesso IP in 30 secondi."
 ```
 
 ---
 
-## 💡 Why This Project Stands Out to Employers
-- **Bridges Sysadmin & Security:** Combines core OS knowledge (logs, firewalls) with defensive software engineering.
-- **Shows Coding Capability:** Demonstrates clean Python architecture, object-oriented design, regex parsing, and REST API development.
-- **Real-World Relevance:** Implements concepts identical to commercial SIEM and EDR solutions (Sigma rules, sliding-window correlation, automated active response).
+## Suite Asgard
+
+Heimdall &egrave; il primo modulo della **suite Asgard** &mdash; un ecosistema di strumenti di sicurezza che coprono le aree chiave di un Security Operations Center:
+
+| Modulo | Ruolo | Stato |
+|:---|:---|:---:|
+| **Heimdall** | HIDS &middot; Rilevamento & Active Response | `Fatto` |
+| **Mjolnir** | Incident Response &middot; Triage & Forensics | `Fatto` |
+| **Bifrost** | Network Telemetry &middot; Crittografia & Port Analysis | `In arrivo` |
 
 ---
 
-## 📄 License
-Distributed under the MIT License. See `LICENSE` for more information.
+<div align="center">
+
+*Costruito come progetto portfolio dimostrativo &mdash; pronto per essere mostrato ai recruiter e ai technical lead.*
+
+**[Fioru12](https://github.com/Fioru12)** &middot; MIT License
+
+</div>
