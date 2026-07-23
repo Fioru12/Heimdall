@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from storage.database import SentinelDatabase
+from storage.database import HeimdallDatabase
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
@@ -12,7 +12,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-db = SentinelDatabase()
+db = HeimdallDatabase()
 parser = LogParser()
 detector = RuleDetector()
 responder = ActiveResponder(dry_run=True) # Safe default for API testing

@@ -15,7 +15,7 @@ ATTACK_LOGS = [
 
 def run_simulation():
     print("=" * 60)
-    print(" SecOps-Sentinel Attack Simulation Tool")
+    print(" Heimdall Attack Simulation Tool")
     print("=" * 60)
     print(f"Target API: {API_URL}\n")
 

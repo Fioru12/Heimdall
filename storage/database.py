@@ -2,12 +2,12 @@ import sqlite3
 import os
 from typing import List, Dict, Any
 
-class SentinelDatabase:
+class HeimdallDatabase:
     """
     Manages SQLite database persistence for security alerts, blocked IPs, and system events.
     """
 
-    def __init__(self, db_path: str = "sentinel.db"):
+    def __init__(self, db_path: str = "heimdall.db"):
         self.db_path = db_path
         self.init_db()
 

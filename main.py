@@ -4,18 +4,18 @@ import uvicorn
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
-from storage.database import SentinelDatabase
+from storage.database import HeimdallDatabase
 
 def run_api(host: str = "127.0.0.1", port: int = 8000):
-    print(f"Starting SecOps-Sentinel API Server on http://{host}:{port} ...")
+    print(f"Starting Heimdall API Server on http://{host}:{port} ...")
     uvicorn.run("api.server:app", host=host, port=port, reload=True)
 
 def run_cli_monitor(logfile: str):
-    print(f"Starting SecOps-Sentinel live file monitor on {logfile} ...")
+    print(f"Starting Heimdall live file monitor on {logfile} ...")
     parser = LogParser()
     detector = RuleDetector()
     responder = ActiveResponder(dry_run=True)
-    db = SentinelDatabase()
+    db = HeimdallDatabase()
 
     import time
     try:
@@ -42,10 +42,10 @@ def run_cli_monitor(logfile: str):
     except FileNotFoundError:
         print(f"Error: Log file '{logfile}' not found.")
     except KeyboardInterrupt:
-        print("\nStopping SecOps-Sentinel monitor.")
+        print("\nStopping Heimdall monitor.")
 
 def main():
-    parser = argparse.ArgumentParser(description="SecOps-Sentinel: HIDS & Active Response Engine")
+    parser = argparse.ArgumentParser(description="Heimdall: HIDS & Active Response Engine")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # API command

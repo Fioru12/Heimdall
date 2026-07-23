@@ -3,7 +3,7 @@ import platform
 import logging
 from typing import Dict, Any
 
-logger = logging.getLogger("SecOps-Sentinel")
+logger = logging.getLogger("Heimdall")
 
 class ActiveResponder:
     """

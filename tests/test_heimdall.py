@@ -3,7 +3,7 @@ import os
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
-from storage.database import SentinelDatabase
+from storage.database import HeimdallDatabase
 
 def test_log_parser_ssh():
     parser = LogParser()
@@ -52,7 +52,7 @@ def test_database_persistence():
     if os.path.exists(db_path):
         os.remove(db_path)
 
-    db = SentinelDatabase(db_path=db_path)
+    db = HeimdallDatabase(db_path=db_path)
     test_alert = {
         "rule_title": "Test Alert",
         "severity": "HIGH",

@@ -6,17 +6,17 @@ if hasattr(sys.stdout, "reconfigure"):
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
-from storage.database import SentinelDatabase
+from storage.database import HeimdallDatabase
 
 def run_demo():
     print("=" * 60)
-    print(" SecOps-Sentinel Local Demonstration & Live Test")
+    print(" Heimdall Local Demonstration & Live Test")
     print("=" * 60)
 
     parser = LogParser()
     detector = RuleDetector()
     responder = ActiveResponder(dry_run=True)
-    db = SentinelDatabase("demo_sentinel.db")
+    db = HeimdallDatabase("demo_heimdall.db")
 
     logs = [
         "Jul 23 14:00:10 server01 sshd[1234]: Failed password for invalid user root from 203.0.113.50 port 51234 ssh2",
