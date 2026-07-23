@@ -3,16 +3,37 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+import yaml
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
+from core.notifier import TelegramNotifier
 from storage.database import HeimdallDatabase
 from core.colors import Colors
+
+def load_config():
+    try:
+        with open("config.yaml", "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        return {}
 
 def run_demo():
     print(Colors.BLUE + "=" * 60 + Colors.ENDC)
     print(f"{Colors.BOLD} Heimdall Local Demonstration & Live Test{Colors.ENDC}")
     print(Colors.BLUE + "=" * 60 + Colors.ENDC)
+
+    config = load_config()
+    tg_config = config.get("telegram", {})
+    notifier = TelegramNotifier(
+        bot_token=tg_config.get("bot_token", ""),
+        chat_id=tg_config.get("chat_id", "")
+    )
+
+    if notifier.enabled:
+        print(f"{Colors.GREEN}[TELEGRAM]{Colors.ENDC} Notifications enabled")
+    else:
+        print(f"{Colors.WARNING}[TELEGRAM]{Colors.ENDC} Notifications disabled (configure config.yaml)")
 
     parser = LogParser()
     detector = RuleDetector()
@@ -45,6 +66,7 @@ def run_demo():
                                 action = "BLOCKED_IP"
                                 db.record_blocked_ip(ip, reason=alert["rule_title"])
                     db.save_alert(alert, action_taken=action)
+                    notifier.send_alert(alert, action=action)
             else:
                 print("   [Info] Event evaluated (threshold not reached yet).")
         else:

@@ -14,3 +14,13 @@ rules:
 responder:
   dry_run: true
   allowed_os: ["Linux", "Windows"]
+
+# Telegram notifications (optional)
+# To enable:
+# 1. Create a bot via @BotFather on Telegram
+# 2. Get your chat ID via @userinfobot
+# 3. Fill in the values below
+telegram:
+  enabled: false
+  bot_token: ""
+  chat_id: ""
