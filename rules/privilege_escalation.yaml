@@ -1,0 +1,8 @@
+id: PRIV_ESCALATION_01
+title: Suspicious Privilege Escalation Attempt
+severity: CRITICAL
+log_source: windows_security
+pattern: "EventID 4672"
+threshold: 3
+timeframe: 60
+description: "Multiple special privileges assigned to new logon sessions (Event 4672) detected, indicating potential privilege escalation or lateral movement."

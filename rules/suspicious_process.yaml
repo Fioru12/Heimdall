@@ -1,0 +1,8 @@
+id: SUSPICIOUS_PROCESS_01
+title: Suspicious Process Execution Detected
+severity: HIGH
+log_source: sysmon
+pattern: "mimikatz"
+threshold: 1
+timeframe: 300
+description: "Known offensive security tool (mimikatz) process execution detected on endpoint, indicating potential credential theft or post-exploitation activity."

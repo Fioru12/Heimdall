@@ -1,0 +1,8 @@
+id: DDOS_DETECTION_01
+title: Possible DDoS or SYN Flood Attack
+severity: HIGH
+log_source: firewall
+pattern: "SYN flood"
+threshold: 50
+timeframe: 10
+description: "High volume of SYN packets detected from single or distributed sources indicating a potential SYN flood or DDoS attack."
