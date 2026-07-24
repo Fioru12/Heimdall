@@ -82,3 +82,39 @@ def test_active_responder():
     success = responder.block_ip("192.168.1.100", reason="Test Brute Force")
     assert success is True
     assert "192.168.1.100" in responder.blocked_ips
+
+
+from core.responder import AlertNotifier
+
+def test_alert_notifier_init():
+    notifier = AlertNotifier()
+    assert notifier.webhook_urls == []
+    assert notifier.email_config is None
+
+def test_alert_notifier_configure_webhooks():
+    notifier = AlertNotifier()
+    notifier.configure_webhooks(["https://hooks.slack.com/test", "not_a_url", "https://discord.com/api/test"])
+    assert len(notifier.webhook_urls) == 2
+
+def test_alert_notifier_webhook_no_urls():
+    notifier = AlertNotifier()
+    result = notifier.send_webhook("Test Alert", "high", "Details here")
+    assert result is False
+
+def test_alert_notifier_webhook_bad_url():
+    notifier = AlertNotifier()
+    notifier.configure_webhooks(["http://127.0.0.1:19999/test"])
+    result = notifier.send_webhook("Test Alert", "high", "Details here")
+    assert result is False
+
+def test_alert_notifier_email_no_config():
+    notifier = AlertNotifier()
+    result = notifier.send_email("Subject", "Body")
+    assert result is False
+
+def test_alert_notifier_notify_returns_dict():
+    notifier = AlertNotifier()
+    result = notifier.notify("Test", "medium", "Details")
+    assert isinstance(result, dict)
+    assert "webhook" in result
+    assert "email" in result
