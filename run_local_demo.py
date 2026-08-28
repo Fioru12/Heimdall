@@ -3,20 +3,13 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-import yaml
 from core.parser import LogParser
 from core.detector import RuleDetector
 from core.responder import ActiveResponder
 from core.notifier import TelegramNotifier
 from storage.database import HeimdallDatabase
 from core.colors import Colors
-
-def load_config():
-    try:
-        with open("config.yaml", "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-    except FileNotFoundError:
-        return {}
+from core.config import load_config
 
 def run_demo():
     print(Colors.BLUE + "=" * 60 + Colors.ENDC)
