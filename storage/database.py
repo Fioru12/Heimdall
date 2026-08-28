@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from typing import List, Dict, Any
+from datetime import datetime, timezone
+from typing import List, Dict, Any, Optional
 
 class HeimdallDatabase:
     """
@@ -42,11 +43,21 @@ class HeimdallDatabase:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ip TEXT UNIQUE,
                 reason TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME
             )
         ''')
 
         conn.commit()
+
+        # Migration: add expires_at to pre-existing databases that were
+        # created before TTL/unblock support existed.
+        cursor.execute("PRAGMA table_info(blocked_ips)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "expires_at" not in columns:
+            cursor.execute("ALTER TABLE blocked_ips ADD COLUMN expires_at DATETIME")
+            conn.commit()
+
         conn.close()
 
     def save_alert(self, alert: Dict[str, Any], action_taken: str = "LOGGED"):
@@ -69,16 +80,42 @@ class HeimdallDatabase:
         conn.commit()
         conn.close()
 
-    def record_blocked_ip(self, ip: str, reason: str):
+    def record_blocked_ip(self, ip: str, reason: str, expires_at: Optional[str] = None):
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute('''
-                INSERT OR IGNORE INTO blocked_ips (ip, reason) VALUES (?, ?)
-            ''', (ip, reason))
+                INSERT OR IGNORE INTO blocked_ips (ip, reason, expires_at) VALUES (?, ?, ?)
+            ''', (ip, reason, expires_at))
             conn.commit()
         except sqlite3.IntegrityError:
             pass
+        conn.close()
+
+    def get_expired_blocked_ips(self) -> List[Dict[str, Any]]:
+        """
+        Returns blocked IP records whose expires_at TTL has already elapsed.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute('''
+            SELECT * FROM blocked_ips
+            WHERE expires_at IS NOT NULL AND expires_at <= ?
+        ''', (now,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def remove_blocked_ip(self, ip: str):
+        """
+        Removes an IP from the blocked_ips table, e.g. after it has been
+        unblocked on the host firewall.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM blocked_ips WHERE ip = ?', (ip,))
+        conn.commit()
         conn.close()
 
     def get_alerts(self, limit: int = 50) -> List[Dict[str, Any]]:

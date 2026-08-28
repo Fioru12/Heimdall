@@ -78,6 +78,18 @@ python main.py simulate
 
 ---
 
+## Integrazione Opzionale con Gjallarhorn
+
+Heimdall invia le proprie notifiche di alert direttamente via Telegram (`core/notifier.py`, classe `TelegramNotifier`). Se nella suite Asgard è presente l'hub centralizzato **Gjallarhorn**, Heimdall può inoltrare gli stessi alert lì invece di duplicare la logica di notifica:
+
+- Imposta `GJALLARHORN_HUB_URL` (es. `http://localhost:8090`) e opzionalmente `GJALLARHORN_API_KEY` nell'ambiente.
+- Se `GJALLARHORN_HUB_URL` è impostata, ogni alert (da `main.py monitor` e da `POST /api/v1/ingest`) viene inviato a Gjallarhorn tramite `core/gjallarhorn_client.py` (`source="Heimdall"`, severità LOW/MEDIUM/HIGH/CRITICAL mappata in minuscolo).
+- Se `GJALLARHORN_HUB_URL` non è impostata (o l'hub non è raggiungibile), Heimdall ricade automaticamente sul `TelegramNotifier` diretto già configurato in `config.yaml` — nessuna rottura, nessuna configurazione aggiuntiva richiesta.
+
+`gjallarhorn_client.py` è copiato in `core/gjallarhorn_client.py` (nessuna dipendenza dal resto del progetto Gjallarhorn) ed espone `notify()`, che non solleva mai eccezioni.
+
+---
+
 ## Esempio di Regola YAML
 
 ```yaml

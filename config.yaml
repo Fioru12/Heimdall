@@ -14,6 +14,10 @@ rules:
 responder:
   dry_run: true
   allowed_os: ["Linux", "Windows"]
+  # Optional: automatically expire IP blocks after N hours (null = permanent
+  # block until manually/`unblock-expired` removed). Prevents a false
+  # positive from turning into a permanent self-DoS.
+  block_ttl_hours: null
 
 # Telegram notifications (optional)
 # To enable:

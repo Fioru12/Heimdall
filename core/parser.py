@@ -1,4 +1,5 @@
 import re
+import ipaddress
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -20,6 +21,26 @@ class LogParser:
         r'^\[(?P<timestamp>[^\]]+)\]\s+(?P<source>[\w\-]+):\s+EventID\s+(?P<event_id>\d+)\s+-\s+(?P<message>.+?)(?:Account:\s+(?P<user>[\w\-]+))?(?:,\s+Source IP:\s+(?P<ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))?$'
     )
 
+    # Rough candidate matcher for IPv6 literals in free-form log text
+    # (e.g. "2001:db8::1", "fe80::1", "::1"). Validated/normalized via the
+    # `ipaddress` module afterwards, since a regex alone can't reliably tell
+    # a real IPv6 address apart from other colon-separated tokens.
+    IPV6_CANDIDATE_REGEX = re.compile(r'(?<![\w:.])(?:[A-Fa-f0-9]{0,4}:){2,7}[A-Fa-f0-9]{0,4}(?![\w:.])')
+
+    @staticmethod
+    def _normalize_ip(ip_str: Optional[str]) -> Optional[str]:
+        """
+        Validates an extracted IP string (v4 or v6) using the stdlib
+        `ipaddress` module and returns its normalized string form, or None
+        if it isn't actually a valid IP address.
+        """
+        if not ip_str:
+            return None
+        try:
+            return str(ipaddress.ip_address(ip_str))
+        except ValueError:
+            return None
+
     def parse_line(self, line: str, log_source_type: str = "auto") -> Optional[Dict[str, Any]]:
         line = line.strip()
         if not line:
@@ -32,7 +53,7 @@ class LogParser:
             return {
                 "timestamp": data.get("timestamp"),
                 "log_type": "ssh_auth",
-                "source_ip": data.get("ip"),
+                "source_ip": self._normalize_ip(data.get("ip")) or data.get("ip"),
                 "username": data.get("user"),
                 "raw_log": line,
                 "status": "failed_login"
@@ -45,7 +66,7 @@ class LogParser:
             return {
                 "timestamp": data.get("timestamp"),
                 "log_type": "windows_security",
-                "source_ip": data.get("ip"),
+                "source_ip": self._normalize_ip(data.get("ip")) or data.get("ip"),
                 "username": data.get("user"),
                 "event_id": data.get("event_id"),
                 "raw_log": line,
@@ -55,7 +76,15 @@ class LogParser:
         # Generic fallback for custom logs or simulation
         # Looking for IP addresses or keywords like 'failed', 'attack', 'unauthorized'
         ip_match = re.search(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', line)
-        source_ip = ip_match.group(0) if ip_match else None
+        source_ip = self._normalize_ip(ip_match.group(0)) if ip_match else None
+
+        if not source_ip:
+            # No IPv4 match; look for an IPv6 literal instead.
+            for candidate in self.IPV6_CANDIDATE_REGEX.findall(line):
+                normalized = self._normalize_ip(candidate)
+                if normalized:
+                    source_ip = normalized
+                    break
 
         if any(kw in line.lower() for kw in ["fail", "error", "unauthorized", "deny", "attack", "malicious"]):
             return {
