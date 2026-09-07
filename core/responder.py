@@ -9,7 +9,38 @@ from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from typing import Dict, Any, List, Optional
 
+import ipaddress
+
 logger = logging.getLogger("Heimdall")
+
+SAFETY_WHITELIST = {
+    "127.0.0.1",
+    "::1",
+    "localhost",
+    "0.0.0.0",
+    "255.255.255.255"
+}
+
+def is_protected_ip(ip_str: str, custom_whitelist: Optional[set] = None) -> bool:
+    """
+    Checks if an IP is protected by safety whitelist or is loopback/unspecified.
+    Prevents accidental self-lockout / self-DoS on local systems and management hosts.
+    """
+    if not ip_str:
+        return True
+    ip_clean = str(ip_str).strip().lower()
+    if ip_clean in SAFETY_WHITELIST:
+        return True
+    if custom_whitelist and ip_clean in custom_whitelist:
+        return True
+    try:
+        addr = ipaddress.ip_address(ip_clean)
+        if addr.is_loopback or addr.is_unspecified:
+            return True
+    except ValueError:
+        pass
+    return False
+
 
 class AlertNotifier:
     """
@@ -80,11 +111,13 @@ class ActiveResponder:
     """
     Executes automated defense actions when high-severity security alerts are triggered,
     such as blocking malicious source IPs using system firewalls (UFW / iptables / Windows Firewall).
+    Includes failsafe protections against self-lockout.
     """
 
-    def __init__(self, dry_run: bool = False):
+    def __init__(self, dry_run: bool = False, whitelist: Optional[List[str]] = None):
         self.dry_run = dry_run
         self.os_type = platform.system()
+        self.whitelist = set(whitelist or [])
         # Maps blocked IP -> expires_at (ISO timestamp string) or None for a
         # permanent block. Using a dict (rather than a set) lets us track TTLs
         # while keeping `ip in self.blocked_ips` membership checks working.
@@ -102,12 +135,14 @@ class ActiveResponder:
         """
         Blocks an IP address using host firewall depending on the OS.
         Sends alert notification via configured webhook/email channels.
-
-        If ttl_hours is provided, the block is temporary: the resulting
-        expiry timestamp is recorded in self.blocked_ips[ip] so callers
-        (e.g. cleanup_expired_blocks) can persist/enforce it.
+        Safeguards against blocking localhost, loopbacks, or whitelisted IPs.
         """
         if not ip or ip == "N/A" or ip in self.blocked_ips:
+            return False
+
+        if is_protected_ip(ip, self.whitelist):
+            logger.warning(f"[SAFETY FAILSAFE] Block rejected: IP {ip} is in safety whitelist / loopback.")
+            print(f"[SAFETY FAILSAFE] Refusing to block protected IP {ip} (loopback/whitelist).")
             return False
 
         expires_at = self._compute_expiry(ttl_hours)

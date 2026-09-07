@@ -11,6 +11,9 @@ class RuleDetector:
     """
 
     def __init__(self, rules_dir: str = "rules"):
+        default_pkg_rules = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rules")
+        if rules_dir == "rules" and os.path.exists(default_pkg_rules) and os.listdir(default_pkg_rules):
+            rules_dir = default_pkg_rules
         self.rules_dir = rules_dir
         self.rules = []
         self.event_windows = defaultdict(lambda: defaultdict(deque))
@@ -71,6 +74,8 @@ class RuleDetector:
                             "source_ip": source_ip,
                             "username": parsed_event.get("username"),
                             "description": rule.get("description", ""),
+                            "mitre_technique": rule.get("mitre_technique"),
+                            "mitre_tactic": rule.get("mitre_tactic"),
                             "count": len(window),
                             "timestamp": parsed_event.get("timestamp"),
                             "raw_log": parsed_event.get("raw_log")
@@ -87,6 +92,8 @@ class RuleDetector:
                             "source_ip": "N/A",
                             "username": parsed_event.get("username"),
                             "description": rule.get("description", ""),
+                            "mitre_technique": rule.get("mitre_technique"),
+                            "mitre_tactic": rule.get("mitre_tactic"),
                             "count": 1,
                             "timestamp": parsed_event.get("timestamp"),
                             "raw_log": parsed_event.get("raw_log")

@@ -6,3 +6,5 @@ pattern: "Failed password for"
 threshold: 3
 timeframe: 30
 description: "Multiple failed SSH login attempts detected from the same IP address within a short time window."
+mitre_technique: "T1110.001"
+mitre_tactic: "Credential Access"
