@@ -21,3 +21,11 @@ def test_active_responder_refuses_to_block_protected_ip():
     assert responder.block_ip("192.168.1.254", reason="Test attack") is False
     # Normal malicious IP allowed to be blocked
     assert responder.block_ip("198.51.100.22", reason="Brute force") is True
+
+def test_active_responder_rejects_invalid_ip_syntax():
+    responder = ActiveResponder(dry_run=True)
+    assert responder.block_ip("not_an_ip") is False
+    assert responder.block_ip("192.168.1.1; rm -rf /") is False
+    assert responder.block_ip("999.999.999.999") is False
+    assert responder.block_ip("192.168.1.500") is False
+

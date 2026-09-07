@@ -140,6 +140,14 @@ class ActiveResponder:
         if not ip or ip == "N/A" or ip in self.blocked_ips:
             return False
 
+        try:
+            parsed_ip = ipaddress.ip_address(str(ip).strip())
+            ip = str(parsed_ip)
+        except ValueError:
+            logger.warning(f"[SECURITY REJECT] Invalid IP format: '{ip}'")
+            print(f"[SECURITY REJECT] Refusing to block invalid IP syntax: '{ip}'")
+            return False
+
         if is_protected_ip(ip, self.whitelist):
             logger.warning(f"[SAFETY FAILSAFE] Block rejected: IP {ip} is in safety whitelist / loopback.")
             print(f"[SAFETY FAILSAFE] Refusing to block protected IP {ip} (loopback/whitelist).")
