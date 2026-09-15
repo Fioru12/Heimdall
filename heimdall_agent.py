@@ -8,13 +8,70 @@ Usage:
     python heimdall_agent.py --server http://localhost:18000 --api-key YOUR_KEY --log-file /var/log/auth.log
 """
 
+from typing import Optional
 import argparse
 import time
 import os
 import sys
 import json
+import socket
+import secrets
 import urllib.request
 import urllib.error
+
+AGENT_ID_FILE = ".heimdall_agent_id"
+
+def get_or_create_agent_id() -> str:
+    if os.path.exists(AGENT_ID_FILE):
+        try:
+            with open(AGENT_ID_FILE, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    agent_id = "agent_" + secrets.token_hex(8)
+    try:
+        with open(AGENT_ID_FILE, "w", encoding="utf-8") as f:
+            f.write(agent_id)
+    except Exception:
+        pass
+    return agent_id
+
+
+def enroll_agent(server_url: str, token: str, agent_name: Optional[str] = None) -> bool:
+    endpoint = f"{server_url.rstrip('/')}/api/v1/agents/register"
+    agent_id = get_or_create_agent_id()
+    name = agent_name or socket.gethostname()
+    os_type = sys.platform
+    payload = json.dumps({
+        "token": token,
+        "agent_id": agent_id,
+        "name": name,
+        "ip_address": "127.0.0.1",
+        "os_type": os_type,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            print(f"[HEIMDALL AGENT] Successfully registered with server! Agent ID: {agent_id}, Tenant: {data.get('tenant_id')}")
+            return True
+    except Exception as e:
+        print(f"[HEIMDALL AGENT] Enrollment failed: {e}")
+        return False
+
+
+def send_heartbeat(server_url: str) -> bool:
+    endpoint = f"{server_url.rstrip('/')}/api/v1/agents/heartbeat"
+    agent_id = get_or_create_agent_id()
+    payload = json.dumps({"agent_id": agent_id, "status": "active"}).encode("utf-8")
+    req = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return True
+    except Exception:
+        return False
+
 
 def tail_and_forward(server_url: str, api_key: str, log_file_path: str, poll_interval: float = 1.0, from_beginning: bool = False):
     endpoint = f"{server_url.rstrip('/')}/api/v1/ingest"
@@ -31,12 +88,17 @@ def tail_and_forward(server_url: str, api_key: str, log_file_path: str, poll_int
         while not os.path.exists(log_file_path):
             time.sleep(poll_interval)
 
+    last_hb = 0
     with open(log_file_path, "r", encoding="utf-8", errors="ignore") as f:
         if not from_beginning:
-            # Seek to end of file for live tailing
             f.seek(0, os.SEEK_END)
 
         while True:
+            now = time.time()
+            if now - last_hb > 30:
+                send_heartbeat(server_url)
+                last_hb = now
+
             line = f.readline()
             if not line:
                 time.sleep(poll_interval)
@@ -64,10 +126,20 @@ def tail_and_forward(server_url: str, api_key: str, log_file_path: str, poll_int
 
 def main():
     parser = argparse.ArgumentParser(description="Heimdall Remote Log Forwarding Agent")
-    parser.add_argument("--server", default="http://localhost:18000", help="Heimdall Master API URL")
-    parser.add_argument("--api-key", required=True, help="Heimdall API Key")
-    parser.add_argument("--log-file", required=True, help="Path to log file to monitor")
+    parser.add_argument("--server", default="http://localhost:8080", help="Heimdall/Ragnarok Master API URL")
+    parser.add_argument("--api-key", default="default", help="Heimdall API Key")
+    parser.add_argument("--log-file", help="Path to log file to monitor")
+    parser.add_argument("--enroll-token", help="Enrollment token to register agent with Ragnarok")
     args = parser.parse_args()
+
+    if args.enroll_token:
+        enroll_agent(args.server, args.enroll_token)
+        if not args.log_file:
+            return
+
+    if not args.log_file:
+        print("Error: --log-file is required for log monitoring mode.")
+        sys.exit(1)
 
     try:
         tail_and_forward(args.server, args.api_key, args.log_file)
@@ -77,3 +149,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
