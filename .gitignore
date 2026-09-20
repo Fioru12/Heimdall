@@ -30,6 +30,7 @@ MANIFEST
 *.sqlite
 *.sqlite3
 test_sentinel.db
+.heimdall_agent_id
 
 # Testing / Cache
 .pytest_cache/
