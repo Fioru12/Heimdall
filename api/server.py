@@ -1,6 +1,6 @@
 import os
 import secrets
-from fastapi import FastAPI, HTTPException, Body, Depends, Header, Query
+from fastapi import FastAPI, HTTPException, Depends, Header, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from storage.database import HeimdallDatabase
@@ -21,9 +21,9 @@ config = load_config()
 API_KEY = os.environ.get("HEIMDALL_API_KEY")
 if not API_KEY:
     API_KEY = secrets.token_urlsafe(24)
-    print(f"[SECURITY WARNING] HEIMDALL_API_KEY not set. Generated a random key for this run:")
+    print("[SECURITY WARNING] HEIMDALL_API_KEY not set. Generated a random key for this run:")
     print(f"    {API_KEY}")
-    print(f"    Set HEIMDALL_API_KEY in your environment to use a stable key across restarts.")
+    print("    Set HEIMDALL_API_KEY in your environment to use a stable key across restarts.")
 
 db = HeimdallDatabase(db_path=config.get("database", {}).get("path", "heimdall.db"))
 parser = LogParser()

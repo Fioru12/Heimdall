@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import uvicorn
 from core.parser import LogParser
