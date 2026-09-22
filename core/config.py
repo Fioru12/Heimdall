@@ -6,6 +6,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "responder": {"dry_run": True, "allowed_os": ["Linux", "Windows"], "block_ttl_hours": None},
     "telegram": {"enabled": False, "bot_token": "", "chat_id": ""},
     "database": {"path": "heimdall.db"},
+    "fim": {"enabled": False, "paths": [], "baseline": "fim_baseline.json", "exclude": []},
 }
 
 

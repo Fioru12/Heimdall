@@ -19,6 +19,15 @@ responder:
   # positive from turning into a permanent self-DoS.
   block_ttl_hours: null
 
+# File Integrity Monitoring (FIM lite, core/fim.py). Disabilitato di default:
+# impostare paths esplicite, creare la baseline una volta, poi `fim-scan`
+# (anche via cron) per rilevare NEW/MODIFIED/DELETED.
+fim:
+  enabled: false
+  paths: []
+  baseline: "fim_baseline.json"
+  exclude: ["*.tmp", "*.log"]
+
 # Telegram notifications (optional)
 # To enable:
 # 1. Create a bot via @BotFather on Telegram
