@@ -120,6 +120,39 @@ def run_unblock_expired():
     else:
         print("[INFO] No expired IP blocks to remove.")
 
+
+def _fim_settings(config, args_paths=None, args_baseline=None):
+    fim = config.get("fim", {}) or {}
+    paths = args_paths or fim.get("paths", []) or []
+    baseline_file = args_baseline or fim.get("baseline", "fim_baseline.json")
+    exclude = fim.get("exclude", []) or []
+    return paths, baseline_file, exclude
+
+
+def run_fim_baseline(paths=None, baseline_file=None):
+    from core.fim import build_baseline, save_baseline
+    config = load_config()
+    paths, baseline_file, exclude = _fim_settings(config, paths, baseline_file)
+    baseline = build_baseline(paths, exclude)
+    save_baseline(baseline, baseline_file)
+    print(f"[FIM] Baseline scritta in {baseline_file}: {len(baseline)} file.")
+
+
+def run_fim_scan(paths=None, baseline_file=None):
+    from core.fim import load_baseline, scan
+    config = load_config()
+    paths, baseline_file, exclude = _fim_settings(config, paths, baseline_file)
+    baseline = load_baseline(baseline_file)
+    events = scan(paths, baseline, exclude)
+    db = HeimdallDatabase(db_path=config.get("database", {}).get("path", "heimdall.db"))
+    if events:
+        db.save_fim_events(events)
+        for ev in events:
+            print(f"[FIM] {ev['status']}: {ev['path']} ({ev['detail']})")
+    else:
+        print("[FIM] Nessuna modifica: tutti i file corrispondono alla baseline.")
+    return events
+
 def main():
     parser = argparse.ArgumentParser(description="Heimdall: HIDS & Active Response Engine")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
@@ -140,6 +173,14 @@ def main():
     # Unblock-expired command
     subparsers.add_parser("unblock-expired", help="Remove firewall rules for IP blocks whose TTL has expired")
 
+    # FIM commands (core/fim.py baseline-hash integrity)
+    fim_base = subparsers.add_parser("fim-baseline", help="Crea la baseline hash FIM per le path configurate")
+    fim_base.add_argument("--paths", nargs="*", default=None, help="File/dir da includere (default: fim.paths in config.yaml)")
+    fim_base.add_argument("--baseline", default=None, help="File baseline JSON (default: fim.baseline in config.yaml)")
+    fim_scan = subparsers.add_parser("fim-scan", help="Confronta i file con la baseline e registra NEW/MODIFIED/DELETED")
+    fim_scan.add_argument("--paths", nargs="*", default=None)
+    fim_scan.add_argument("--baseline", default=None)
+
     args = parser.parse_args()
 
     if args.command == "api":
@@ -151,6 +192,10 @@ def main():
         simulate_attacks.run_simulation()
     elif args.command == "unblock-expired":
         run_unblock_expired()
+    elif args.command == "fim-baseline":
+        run_fim_baseline(paths=args.paths, baseline_file=args.baseline)
+    elif args.command == "fim-scan":
+        run_fim_scan(paths=args.paths, baseline_file=args.baseline)
     else:
         parser.print_help()
 

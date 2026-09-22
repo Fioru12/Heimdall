@@ -48,6 +48,17 @@ class HeimdallDatabase:
             )
         ''')
 
+        # FIM events table (core/fim.py scan results)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS fim_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                path TEXT,
+                status TEXT,
+                detail TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         conn.commit()
 
         # Migration: add expires_at to pre-existing databases that were
@@ -122,6 +133,26 @@ class HeimdallDatabase:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM alerts ORDER BY id DESC LIMIT ?', (limit,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def save_fim_events(self, events: List[Dict[str, Any]]) -> int:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        for ev in events:
+            cursor.execute(
+                'INSERT INTO fim_events (path, status, detail) VALUES (?, ?, ?)',
+                (ev.get("path"), ev.get("status"), ev.get("detail", "")),
+            )
+        conn.commit()
+        conn.close()
+        return len(events)
+
+    def get_fim_events(self, limit: int = 100) -> List[Dict[str, Any]]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM fim_events ORDER BY id DESC LIMIT ?', (limit,))
         rows = cursor.fetchall()
         conn.close()
         return [dict(row) for row in rows]
