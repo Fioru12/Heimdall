@@ -20,6 +20,7 @@ import urllib.request
 import urllib.error
 
 AGENT_ID_FILE = ".heimdall_agent_id"
+AGENT_SECRET_FILE = ".heimdall_agent_secret"
 
 def get_or_create_agent_id() -> str:
     if os.path.exists(AGENT_ID_FILE):
@@ -35,6 +36,24 @@ def get_or_create_agent_id() -> str:
     except Exception:
         pass
     return agent_id
+
+
+def _save_agent_secret(agent_secret: str) -> None:
+    try:
+        with open(AGENT_SECRET_FILE, "w", encoding="utf-8") as f:
+            f.write(agent_secret)
+    except Exception:
+        pass
+
+
+def _load_agent_secret() -> str:
+    if os.path.exists(AGENT_SECRET_FILE):
+        try:
+            with open(AGENT_SECRET_FILE, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    return ""
 
 
 def enroll_agent(server_url: str, token: str, agent_name: Optional[str] = None) -> bool:
@@ -54,6 +73,9 @@ def enroll_agent(server_url: str, token: str, agent_name: Optional[str] = None) 
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+            agent_secret = data.get("agent_secret", "")
+            if agent_secret:
+                _save_agent_secret(agent_secret)
             print(f"[HEIMDALL AGENT] Successfully registered with server! Agent ID: {agent_id}, Tenant: {data.get('tenant_id')}")
             return True
     except Exception as e:
@@ -64,7 +86,8 @@ def enroll_agent(server_url: str, token: str, agent_name: Optional[str] = None) 
 def send_heartbeat(server_url: str) -> bool:
     endpoint = f"{server_url.rstrip('/')}/api/v1/agents/heartbeat"
     agent_id = get_or_create_agent_id()
-    payload = json.dumps({"agent_id": agent_id, "status": "active"}).encode("utf-8")
+    agent_secret = _load_agent_secret()
+    payload = json.dumps({"agent_id": agent_id, "agent_secret": agent_secret, "status": "active"}).encode("utf-8")
     req = urllib.request.Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
